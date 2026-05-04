@@ -1,6 +1,8 @@
 package vector3d;
 
-public class Color {
+import java.io.Serializable;
+
+public class Color implements Serializable{
     int r, g, b;
 
     public Color(int r, int g, int b) {
@@ -35,7 +37,8 @@ public class Color {
         if (g >= 0 && g <= 255) {
             this.g = g;
         } else {
-            System.err.println("Range of green color should be 0 - 255");
+            System.err.println("public class Color implements Serializable{\r\n" + //
+                                "Range of green color should be 0 - 255");
         }
     }
 

@@ -1,6 +1,8 @@
 package vector3d;
 
-public abstract class Vector3d implements AdvancedCalculator, Cloneable {
+import java.io.Serializable;
+
+public abstract class Vector3d implements AdvancedCalculator, Cloneable, Serializable {
     protected double x, y, z;
     protected static int counter = 0;
     protected Color color;

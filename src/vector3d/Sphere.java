@@ -1,6 +1,8 @@
 package vector3d;
 
-public class Sphere extends Vector3d {
+import java.io.Serializable;
+
+public class Sphere extends Vector3d implements Serializable{
     public double radius;
 
     public Sphere(double x, double y, double z, Color color, double radius) throws InvalidDimensionException {

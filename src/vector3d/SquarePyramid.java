@@ -1,6 +1,8 @@
 package vector3d;
 
-public class SquarePyramid extends Vector3d {
+import java.io.Serializable;
+
+public class SquarePyramid extends Vector3d implements Serializable{
     public double height, baseEdge;
 
     public SquarePyramid(double x, double y, double z, Color color, double height, double baseEdge)

@@ -1,6 +1,8 @@
 package vector3d;
 
-public class SphereFactory extends ShapeFactory {
+import java.io.Serializable;
+
+public class SphereFactory extends ShapeFactory implements Serializable{
     @Override
     public Vector3d createShape(double x, double y, double z, Color color, double... dimensions) 
             throws InvalidDimensionException {
