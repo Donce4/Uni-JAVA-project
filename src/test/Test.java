@@ -15,6 +15,13 @@ public class Test {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(()-> createAndShowGUI());
+        // SwingUtilities.invokeLater(new Runnable() {
+        //     @Override
+        //     public void run() {
+        //         createAndShowGUI();
+        //     }
+        // });
+
 
         // Vector3d v1 = null;
         // Vector3d v2 = null;
@@ -90,9 +97,12 @@ public class Test {
 
         JButton saveButton = new JButton("Save data");
         JButton loadButton = new JButton("Load data");
+        JTextField textField = new JTextField("Enter text: ", 15);
+
 
         frame.add(saveButton);
         frame.add(loadButton);
+        frame.add(textField);
 
         frame.setVisible(true);
 
@@ -111,6 +121,7 @@ public class Test {
             new Thread(() -> {
                 try(FileInputStream fis = new FileInputStream("figuros.bin");
                 ObjectInputStream ois = new ObjectInputStream(fis)){
+                    Thread.sleep(5000);
                     @SuppressWarnings("unchecked")
                     List<Vector3d> loadedShapes = (List<Vector3d>) ois.readObject();
                     SwingUtilities.invokeLater(() -> {JOptionPane.showMessageDialog(null, "Figures loaded: " + loadedShapes.size());});
