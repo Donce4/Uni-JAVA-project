@@ -76,33 +76,57 @@ public class Test {
 
     }
 
-    private static void createAndShowGUI(){
+private static void createAndShowGUI() {
 
-        List<Vector3d> shapesToSave = new ArrayList<>();
-        try{
+    List<Vector3d> shapesToSave = new ArrayList<>();
+    JFrame frame = new JFrame("Shape Manager");
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setSize(500, 300);
+    frame.setLayout(new FlowLayout());
+
+    JTextField xField = new JTextField("0", 3);
+    JTextField yField = new JTextField("0", 3);
+    JTextField zField = new JTextField("0", 3);
+    JTextField dimField = new JTextField("5.0", 5);
+    JLabel label = new JLabel("X, Y, Z and Dimension:");
+
+    JButton addSphereButton = new JButton("Add Sphere");
+    
+    JButton saveButton = new JButton("Save to File");
+    JButton loadButton = new JButton("Load and View");
+
+    frame.add(label);
+    frame.add(xField);
+    frame.add(yField);
+    frame.add(zField);
+    frame.add(new JLabel("Size:"));
+    frame.add(dimField);
+    frame.add(addSphereButton);
+    frame.add(new JSeparator());
+    frame.add(saveButton);
+    frame.add(loadButton);
+
+    frame.setVisible(true);
+
+    addSphereButton.addActionListener(e -> {
+        try {
+            int x = Integer.parseInt(xField.getText());
+            int y = Integer.parseInt(yField.getText());
+            int z = Integer.parseInt(zField.getText());
+            double dim = Double.parseDouble(dimField.getText());
             vector3d.Color red = new vector3d.Color(255, 0, 0);
-            shapesToSave.add(new SphereFactory().createShape(5, 5, 5, red, 5.0));
-            shapesToSave.add(new SquarePyramidFactory().createShape(5, 5, 5, red, 5.0, 5.0));
-            shapesToSave.add(new RectangularPrismFactory().createShape(5, 5, 5, red, 5.0, 5.0, 5.0));
+            Vector3d newSphere = new SphereFactory().createShape(x, y, z, red, dim);
+            shapesToSave.add(newSphere);
 
-        } catch (Exception e){
-            System.err.println("Mistake creating figures: " + e);
+            JOptionPane.showMessageDialog(frame, "Sphere added! Total shapes: " + shapesToSave.size());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(frame, "Please enter valid numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Error: " + ex.getMessage());
         }
-
-
-        JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 150);
-        frame.setLayout(new FlowLayout());
-
-        JButton saveButton = new JButton("Save data");
-        JButton loadButton = new JButton("Load data");
-        JTextField textField = new JTextField("Enter text: ", 15);
-
-
+    });
         frame.add(saveButton);
         frame.add(loadButton);
-        frame.add(textField);
 
         frame.setVisible(true);
 
@@ -121,16 +145,31 @@ public class Test {
             new Thread(() -> {
                 try(FileInputStream fis = new FileInputStream("figuros.bin");
                 ObjectInputStream ois = new ObjectInputStream(fis)){
-                    Thread.sleep(5000);
                     @SuppressWarnings("unchecked")
                     List<Vector3d> loadedShapes = (List<Vector3d>) ois.readObject();
-                    SwingUtilities.invokeLater(() -> {JOptionPane.showMessageDialog(null, "Figures loaded: " + loadedShapes.size());});
+                    StringBuilder message = new StringBuilder();
+                    message.append("Užkrauta figūrų: ").append(loadedShapes.size()).append("\n\n");
+                    for (Vector3d shape : loadedShapes) {
+                        message.append("Figūra: ").append(shape.toString()).append("\n");
+                        message.append(String.format("Plotas: %.2f\n", shape.calculateArea()));
+                        message.append(String.format("Tūris: %.2f\n", shape.calculateVolume()));
+                        message.append("\n");
+                    }
+                    SwingUtilities.invokeLater(() -> {
+                        JTextArea textArea = new JTextArea(message.toString());
+                        textArea.setEditable(false);
+                        textArea.setMargin(new Insets(5, 5, 5, 5));
+                        
+                        JScrollPane scrollPane = new JScrollPane(textArea);
+                        scrollPane.setPreferredSize(new Dimension(400, 250));
+                        
+                        JOptionPane.showMessageDialog(frame, scrollPane, "Užkrautos figūros", JOptionPane.INFORMATION_MESSAGE);
+                    });
                 }catch (Exception ex){
                     System.err.println("Error while loading file: " + ex);
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(frame, "Klaida užkraunant: " + ex.getMessage(), "Klaida", JOptionPane.ERROR_MESSAGE));
                 }
             }).start();
         });
-
-
     }
 }

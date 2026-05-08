@@ -1,6 +1,8 @@
 package vector3d;
 
-public class RectangularPrism extends Vector3d {
+import java.io.Serializable;
+
+public class RectangularPrism extends Vector3d implements Serializable {
     public double length, width, height;
 
     public RectangularPrism(double x, double y, double z, Color color, double length, double width, double height)
