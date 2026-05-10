@@ -22,6 +22,11 @@ public class Circle extends Shape{
     }
 
     @Override
+    public void setSize(int width, int height){
+        this.radius = Math.max(Math.abs(width), Math.abs(height)) / 2;
+    }
+
+    @Override
     public void draw(Graphics g){
 
         int x = getPoint().x;

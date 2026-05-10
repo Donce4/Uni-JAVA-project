@@ -19,7 +19,7 @@ public abstract class Shape{
 
     
     public Point getPoint(){
-        return this.position;
+        return new Point(this.position);
     }
     public Color getColor(){
         return this.color;
@@ -39,5 +39,7 @@ public abstract class Shape{
     public abstract boolean contains(Point mousePoint); // This abstract method checks if somebody pressed on the figure
 
     public abstract Rectangle getBounds();
+
+    public abstract void setSize(int width, int height);
 
 }

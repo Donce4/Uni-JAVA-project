@@ -40,7 +40,11 @@ public class Triangle extends Shape {
         return (base * height) / 2.0;
     }
     
-
+    @Override
+    public void setSize(int width, int height){
+        this.base = width;
+        this.height = height;
+    }
 
     @Override
     public void draw(Graphics g){

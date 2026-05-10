@@ -32,6 +32,14 @@ public class Rectangle extends Shape{
     }
 
     @Override
+    public void setSize(int width, int height){
+
+        this.width = width;
+        this.length = height;
+
+    }
+
+    @Override
     public void draw(Graphics g){
 
         int x = getPoint().x;

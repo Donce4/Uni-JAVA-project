@@ -10,9 +10,8 @@ public class GroupShape extends Shape{
 
     protected ArrayList<Shape> shapes = new ArrayList<>();
 
-    public GroupShape(Point position, Color color, ArrayList<Shape> shapes){
+    public GroupShape(Point position, Color color){
         super(position, color);
-        this.shapes = shapes;
     }
     
 
@@ -49,6 +48,12 @@ public class GroupShape extends Shape{
 
 
         return new java.awt.Rectangle(minX, minY, maxX - minX, maxY - minY);
+
+    }
+
+
+    @Override
+    public void setSize(int width, int height){
 
     }
 

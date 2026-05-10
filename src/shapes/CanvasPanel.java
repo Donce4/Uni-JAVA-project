@@ -1,4 +1,5 @@
 package shapes;
+
 import java.util.ArrayList;
 import java.awt.Graphics;
 import javax.swing.JPanel;
@@ -18,47 +19,90 @@ public class CanvasPanel extends JPanel{
     private Point lastMousePoint = null; 
     protected Shape currShape = null;
     protected ArrayList<Shape> selectedShapes = new ArrayList<>(); // Creates selected shapes ArrayList
+    protected enum ToolType{
+        SELECT, RECTANGLE, CIRCLE, TRIANGLE;
+    }
+    ToolType currTool = ToolType.SELECT;
 
     public CanvasPanel(){
         MouseAdapter mouseHandler = new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e){
-                findSelectedShape(e.getPoint());
-                if (currShape != null){
-                    if (!e.isControlDown()){
-                        selectedShapes.clear();
-                        selectedShapes.add(currShape);
+                @Override
+                public void mousePressed(MouseEvent e){
+                    if (currTool == ToolType.SELECT){
+                        findSelectedShape(e.getPoint());
+                            if (currShape != null){
+                                if (!e.isControlDown()){
+                                    selectedShapes.clear();
+                                    selectedShapes.add(currShape);
+                                }
+                                else if(selectedShapes.contains(currShape)){
+                                    selectedShapes.remove(currShape);
+                                }
+                                else{
+                                    selectedShapes.add(currShape);
+                                }
+                                lastMousePoint = e.getPoint(); // Remember beginning
+                            }
+                            else{
+                                selectedShapes.clear();
+                            }
                     }
-                    else if(selectedShapes.contains(currShape)){
-                        selectedShapes.remove(currShape);
-                    }
-                    else{
-                        selectedShapes.add(currShape);
-                    }
-                    lastMousePoint = e.getPoint(); // Remember beginning
+                    else if (currTool == ToolType.RECTANGLE || currTool == ToolType.CIRCLE || currTool == ToolType.TRIANGLE){
+                            currShape = createShape(currTool, e.getPoint());
+                            if (currShape != null) {
+                                addShape(currShape);
+                                lastMousePoint = e.getPoint();
+                            }
+                        }
                 }
-                else{
-                    selectedShapes.clear();
-                }
-            }
-            @Override
-            public void mouseDragged(MouseEvent e){
-                if (currShape != null && lastMousePoint != null){
+                @Override
+                public void mouseDragged(MouseEvent e){
+                    if (currTool == ToolType.SELECT){
+                        if (currShape != null && lastMousePoint != null){
+        
+                            Point currentPoint = e.getPoint();
+        
+                            int dx = currentPoint.x - lastMousePoint.x;
+                            int dy = currentPoint.y - lastMousePoint.y;
+                            
+                            for (Shape s : selectedShapes){
+                                s.moveBy(dx, dy);
+                            }
+        
+                            lastMousePoint = currentPoint; // Reset
+                            repaint();
+                        }
+                    }
+                    else if (currTool == ToolType.RECTANGLE || currTool == ToolType.CIRCLE || currTool == ToolType.TRIANGLE){
+                        if (currShape != null){
 
-                    Point currentPoint = e.getPoint();
+                            int width = e.getX() - lastMousePoint.x;
+                            int height = e.getY() - lastMousePoint.y;
 
-                    int dx = currentPoint.x - lastMousePoint.x;
-                    int dy = currentPoint.y - lastMousePoint.y;
+                            currShape.setSize(width, height);
 
-                    currShape.moveBy(dx, dy);
+                            repaint();
 
-                    lastMousePoint = currentPoint; // Reset
-                    repaint();
+                        }
                 }
             }
         };
         this.addMouseListener(mouseHandler);
         this.addMouseMotionListener(mouseHandler);
+    }
+
+    public void setTool(ToolType newTool) {
+        this.currTool = newTool;
+        this.selectedShapes.clear(); // Good practice to deselect when switching tools
+        repaint();
+    }
+    private Shape createShape(ToolType type, Point p) {
+        switch (type) {
+            case RECTANGLE: return new Rectangle(p, Color.BLACK, 0, 0);
+            case CIRCLE:    return new Circle(p, Color.BLACK, 0);
+            case TRIANGLE:  return new Triangle(p, Color.BLACK, 0, 0);
+            default: return null;
+        }
     }
 
     public void ungroupSelectedShapes(){
@@ -77,7 +121,10 @@ public class CanvasPanel extends JPanel{
     public void groupSelectedShapes(){
         if (selectedShapes.size() > 1){
 
-            GroupShape group = new GroupShape(new Point(0, 0), Color.BLACK); // We create a new group
+            Point originalPos = selectedShapes.get(0).getPoint(); // Create reference
+            Point groupPos = new Point(originalPos.x, originalPos.y);
+
+            GroupShape group = new GroupShape(groupPos, Color.BLACK); // We create a new group
 
             for (Shape s : selectedShapes){ // Transfer all the shapes from shape list to a group list
                 group.addShape(s);
@@ -85,6 +132,9 @@ public class CanvasPanel extends JPanel{
             shapes.removeAll(selectedShapes);
             shapes.add(group); // Add a single shape as a group
             selectedShapes.clear(); // We clear the selected shapes
+            selectedShapes.add(group);
+            currShape = group;
+            repaint();
         }
     }
     
@@ -113,13 +163,14 @@ public class CanvasPanel extends JPanel{
         for (Shape shape : shapes)
         {
             shape.draw(g);
-            if (shape == currShape){
-                Color oldColor = g.getColor();
-                g.setColor(Color.RED);
-                java.awt.Rectangle b = shape.getBounds();
-                g.drawRect(b.x, b.y, b.width, b.height);
-                g.setColor(oldColor);
-            }
         }
+        Color oldColor = g.getColor();
+        g.setColor(Color.RED);
+
+        for (Shape s : selectedShapes){
+            java.awt.Rectangle b = s.getBounds();
+            g.drawRect(b.x, b.y, b.width, b.height);
+        }
+        g.setColor(oldColor);
     }
 }
