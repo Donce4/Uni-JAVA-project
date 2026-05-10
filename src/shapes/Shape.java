@@ -5,8 +5,11 @@ import java.awt.Graphics;  //For the whole GUI
 import java.awt.Point; //For coordinates
 import java.awt.event.MouseEvent;
 import java.awt.Rectangle;
+import java.io.Serializable;
 
-public abstract class Shape{
+public abstract class Shape implements Serializable
+{
+    private static final long serialVersionUID = 1L;
     protected Point position; // Sukuriamos pirminės x,y koordinatės
     protected Color color; // Sukuriama pirminė spalva
 
@@ -28,6 +31,9 @@ public abstract class Shape{
     public void setPoint(Point newPos){
         this.position.x = newPos.x;
         this.position.y = newPos.y;
+    }
+    public void setColor(Color color) {
+        this.color = color;
     }
 
     public void moveBy(int dx, int dy){

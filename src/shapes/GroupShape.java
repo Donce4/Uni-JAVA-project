@@ -51,6 +51,12 @@ public class GroupShape extends Shape{
 
     }
 
+    public void setColor(Color color) {
+        super.setColor(color);
+        for (Shape s : shapes) {
+            s.setColor(color);
+        }
+    }
 
     @Override
     public void setSize(int width, int height){

@@ -1,5 +1,10 @@
 package shapes;
 
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.awt.Graphics;
 import javax.swing.JPanel;
@@ -18,6 +23,7 @@ public class CanvasPanel extends JPanel{
     protected ArrayList<Shape> shapes = new ArrayList<>();
     private Point lastMousePoint = null; 
     protected Shape currShape = null;
+    protected Color currentColor = Color.BLACK;
     protected ArrayList<Shape> selectedShapes = new ArrayList<>(); // Creates selected shapes ArrayList
     protected enum ToolType{
         SELECT, RECTANGLE, CIRCLE, TRIANGLE;
@@ -25,9 +31,22 @@ public class CanvasPanel extends JPanel{
     ToolType currTool = ToolType.SELECT;
 
     public CanvasPanel(){
+        this.setFocusable(true);
+
+        this.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                // Check for both Backspace and Delete keys
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE || 
+                    e.getKeyCode() == java.awt.event.KeyEvent.VK_DELETE) {
+                    deleteSelectedShapes();
+                }
+            }
+        });
         MouseAdapter mouseHandler = new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e){
+                    requestFocusInWindow();
                     if (currTool == ToolType.SELECT){
                         findSelectedShape(e.getPoint());
                             if (currShape != null){
@@ -98,9 +117,9 @@ public class CanvasPanel extends JPanel{
     }
     private Shape createShape(ToolType type, Point p) {
         switch (type) {
-            case RECTANGLE: return new Rectangle(p, Color.BLACK, 0, 0);
-            case CIRCLE:    return new Circle(p, Color.BLACK, 0);
-            case TRIANGLE:  return new Triangle(p, Color.BLACK, 0, 0);
+            case RECTANGLE: return new Rectangle(p, this.currentColor, 0, 0);
+            case CIRCLE:    return new Circle(p, this.currentColor, 0);
+            case TRIANGLE:  return new Triangle(p, this.currentColor, 0, 0);
             default: return null;
         }
     }
@@ -142,6 +161,19 @@ public class CanvasPanel extends JPanel{
         shapes.add(s);
         repaint();
     }
+    public void deleteSelectedShapes() {
+        this.shapes.removeAll(selectedShapes);
+        this.selectedShapes.clear();
+        this.currShape = null;
+        this.repaint();
+    }
+
+    public void clearCanvas() {
+        this.shapes.clear();
+        this.selectedShapes.clear();
+        this.currShape = null;
+        this.repaint();
+    }
 
     public void findSelectedShape(Point p){
         for (int i = shapes.size() - 1; i >= 0; --i){
@@ -155,6 +187,41 @@ public class CanvasPanel extends JPanel{
             }
         }
         currShape = null;
+    }
+
+    public void changeColor(Color newColor) {
+        this.currentColor = newColor;
+        for (Shape s : selectedShapes) {
+            s.setColor(newColor);
+        }
+        this.repaint();
+    }
+
+    public void saveToFile(String filepath) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filepath))) {
+            oos.writeObject(this.shapes); 
+            System.out.println("Shapes successfully saved to " + filepath);
+        } catch (IOException e) {
+            System.out.println("Error saving file: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked") // Tells Java to trust that we are reading an ArrayList<Shape>
+    public void loadFromFile(String filepath) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filepath))) {
+            // Read the object and cast it back to an ArrayList<Shape>
+            this.shapes = (ArrayList<Shape>) ois.readObject(); 
+            
+            // Clean up the canvas state just in case
+            this.selectedShapes.clear(); 
+            this.currShape = null;
+            this.currTool = ToolType.SELECT;
+            
+            this.repaint(); // Redraw the newly loaded shapes!
+            System.out.println("Shapes successfully loaded from " + filepath);
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading file: " + e.getMessage());
+        }
     }
 
     @Override
