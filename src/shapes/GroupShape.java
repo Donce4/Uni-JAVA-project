@@ -28,27 +28,33 @@ public class GroupShape extends Shape{
         return shapes.contains(s);
     }   
     
-    @Override
+@Override
     public java.awt.Rectangle getBounds(){
-        if (shapes.isEmpty()) return new java.awt.Rectangle(0, 0, 0, 0);
-        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
-        for (Shape shape : shapes){
+        // If the group is empty, just return a tiny box
+        if (shapes == null || shapes.isEmpty()) {
+            return new java.awt.Rectangle(this.position.x, this.position.y, 0, 0);
+        }
 
+        // Set extreme starting values so the first shape will instantly override them
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+
+        // Loop through all children to find the absolute furthest edges
+        for (Shape shape : shapes){
             java.awt.Rectangle b = shape.getBounds();
 
-            // Left upper angle
             if (b.x < minX) minX = b.x;
             if (b.y < minY) minY = b.y;
 
-            // Right lower angle (size and angle)
+            // The right edge is X + Width. The bottom edge is Y + Height.
             if (b.x + b.width > maxX) maxX = b.x + b.width;
             if (b.y + b.height > maxY) maxY = b.y + b.height;
-
         }
 
-
+        // Create the massive square covering all extreme points
         return new java.awt.Rectangle(minX, minY, maxX - minX, maxY - minY);
-
     }
 
     public void setColor(Color color) {
@@ -72,13 +78,10 @@ public class GroupShape extends Shape{
     }
 
 
-    @Override
+@Override
     public boolean contains(Point p){
-        for (Shape shape : shapes){
-            if (shape.contains(p))
-                return true;
-        }
-        return false;
+        // We get the big bounding box, and ask Java if the point is inside it!
+        return getBounds().contains(p);
     }
 
     @Override
