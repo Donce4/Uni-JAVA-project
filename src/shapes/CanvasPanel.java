@@ -15,28 +15,57 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Color;
 
-
-// Responsible for drawing whatever is currently in its list
-
+/**
+ * Pagrindinė grafinės drobės klasė, atsakinga už figūrų piešimą, atvaizdavimą bei 
+ * vartotojo sąveikos (pelės paspaudimų, tempimų ir klaviatūros mygtukų) apdorojimą.
+ * Paveldi {@link JPanel} klasę.
+ */
 public class CanvasPanel extends JPanel{
 
+    /** Sąrašas, kuriame saugomos visos drobėje nupieštos figūros. */
     protected ArrayList<Shape> shapes = new ArrayList<>();
+    
+    /** Paskutinė užfiksuota pelės pozicija (naudojama figūrų tempimui). */
     private Point lastMousePoint = null; 
+    
+    /** Šiuo metu aktyvi (kuriama arba manipuliuojama) figūra. */
     protected Shape currShape = null;
+    
+    /** Dabartinė spalva, kuri bus taikoma naujoms ar pasirinktoms figūroms. */
     protected Color currentColor = Color.BLACK;
-    protected ArrayList<Shape> selectedShapes = new ArrayList<>(); // Creates selected shapes ArrayList
+    
+    /** Sąrašas figūrų, kurios yra pažymėtos (pasirinktos) vartotojo. */
+    protected ArrayList<Shape> selectedShapes = new ArrayList<>();
+
+    /**
+     * Galimi įrankių tipai, nurodantys, kokia operacija šiuo metu bus atliekama drobėje.
+     */
     protected enum ToolType{
-        SELECT, RECTANGLE, CIRCLE, TRIANGLE;
+        /** Pasirinkimo ir tempimo įrankis */ 
+        SELECT, 
+        /** Stačiakampio piešimo įrankis */ 
+        RECTANGLE, 
+        /** Apskritimo piešimo įrankis */ 
+        CIRCLE, 
+        /** Trikampio piešimo įrankis */ 
+        TRIANGLE;
     }
+    
+    /** Šiuo metu pasirinktas įrankis. Pagal nutylėjimą - SELECT (pasirinkimas). */
     ToolType currTool = ToolType.SELECT;
 
+    /**
+     * Sukuria naują drobės (CanvasPanel) instanciją.
+     * Inicializuoja klaviatūros ir pelės įvykių klausytojus (listeners) 
+     * figūrų piešimui, pasirinkimui, perkėlimui bei trynimui.
+     */
     public CanvasPanel(){
         this.setFocusable(true);
 
         this.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
             public void keyPressed(java.awt.event.KeyEvent e) {
-                // Check for both Backspace and Delete keys
+                // Patikrina, ar paspausti Backspace arba Delete klavišai
                 if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE || 
                     e.getKeyCode() == java.awt.event.KeyEvent.VK_DELETE) {
                     deleteSelectedShapes();
@@ -60,7 +89,7 @@ public class CanvasPanel extends JPanel{
                                 else{
                                     selectedShapes.add(currShape);
                                 }
-                                lastMousePoint = e.getPoint(); // Remember beginning
+                                lastMousePoint = e.getPoint(); // Prisimena pradinį tašką
                             }
                             else{
                                 selectedShapes.clear();
@@ -88,7 +117,7 @@ public class CanvasPanel extends JPanel{
                                 s.moveBy(dx, dy);
                             }
         
-                            lastMousePoint = currentPoint; // Reset
+                            lastMousePoint = currentPoint; // Atnaujina tašką
                             repaint();
                         }
                     }
@@ -110,11 +139,22 @@ public class CanvasPanel extends JPanel{
         this.addMouseMotionListener(mouseHandler);
     }
 
+    /**
+     * Nustato naują aktyvų įrankį drobėje ir atšaukia dabartinį figūrų pasirinkimą.
+     * @param newTool Naujas įrankio tipas (pvz., RECTANGLE, SELECT).
+     */
     public void setTool(ToolType newTool) {
         this.currTool = newTool;
-        this.selectedShapes.clear(); // Good practice to deselect when switching tools
+        this.selectedShapes.clear(); // Geroji praktika atšaukti žymėjimą keičiant įrankį
         repaint();
     }
+    
+    /**
+     * Gamyklos (Factory) metodas, sukuriantis naują figūrą pagal nurodytą įrankio tipą.
+     * @param type Figūros tipas iš {@link ToolType}.
+     * @param p    Pradinis taškas (koordinatės), kuriame figūra sukuriama.
+     * @return Sukurtas {@link Shape} objektas arba null, jei tipas neatpažintas.
+     */
     private Shape createShape(ToolType type, Point p) {
         switch (type) {
             case RECTANGLE: return new Rectangle(p, this.currentColor, 0, 0);
@@ -124,43 +164,59 @@ public class CanvasPanel extends JPanel{
         }
     }
 
+    /**
+     * Išgrupuoja pasirinktą figūrų grupę.
+     * Jei pasirinktas tik vienas elementas ir jis yra {@link GroupShape} tipo, 
+     * jo vidinės figūros perkeliamos atgal į bendrą sąrašą, o pati grupė pašalinama.
+     */
     public void ungroupSelectedShapes(){
         if (selectedShapes.size() == 1 && selectedShapes.get(0) instanceof GroupShape){
             
-            GroupShape group = (GroupShape) selectedShapes.get(0); // Get that group
-            ArrayList<Shape> children = group.getShapes(); // Unwrap it to ArrayList
-            shapes.addAll(children); // Add all of them
-            shapes.remove(group); // Remove the group
-            selectedShapes.clear(); // Clear the selected items
-
+            GroupShape group = (GroupShape) selectedShapes.get(0); // Gauna grupę
+            ArrayList<Shape> children = group.getShapes(); // Išpakuoja į ArrayList
+            shapes.addAll(children); // Prideda jas atgal į drobę
+            shapes.remove(group); // Pašalina grupės objektą
+            selectedShapes.clear(); // Išvalo pasirinkimus
 
         }
     }
 
+    /**
+     * Apjungia visas šiuo metu pasirinktas figūras į vieną bendrą grupę (Composite pattern).
+     * Sukuriama nauja {@link GroupShape}, į kurią perkeliamos figūros iš drobės.
+     */
     public void groupSelectedShapes(){
         if (selectedShapes.size() > 1){
 
-            Point originalPos = selectedShapes.get(0).getPoint(); // Create reference
+            Point originalPos = selectedShapes.get(0).getPoint(); // Prisimenama originali pozicija
             Point groupPos = new Point(originalPos.x, originalPos.y);
 
-            GroupShape group = new GroupShape(groupPos, Color.BLACK); // We create a new group
+            GroupShape group = new GroupShape(groupPos, Color.BLACK); // Sukuriama grupė
 
-            for (Shape s : selectedShapes){ // Transfer all the shapes from shape list to a group list
+            for (Shape s : selectedShapes){ // Perkelia figūras
                 group.addShape(s);
             }
             shapes.removeAll(selectedShapes);
-            shapes.add(group); // Add a single shape as a group
-            selectedShapes.clear(); // We clear the selected shapes
-            selectedShapes.add(group);
+            shapes.add(group); // Prideda grupę kaip vieną objektą
+            selectedShapes.clear(); // Išvalo pasirinkimus
+            selectedShapes.add(group); // Pažymi naujai sukurtą grupę
             currShape = group;
             repaint();
         }
     }
     
+    /**
+     * Prideda nurodytą figūrą į drobės figūrų sąrašą ir atnaujina vaizdą.
+     * @param s Pridedama figūra (objektas paveldimas iš {@link Shape}).
+     */
     public void addShape(Shape s){
         shapes.add(s);
         repaint();
     }
+    
+    /**
+     * Ištrina visas šiuo metu pasirinktas figūras iš drobės sąrašo ir atnaujina vaizdą.
+     */
     public void deleteSelectedShapes() {
         this.shapes.removeAll(selectedShapes);
         this.selectedShapes.clear();
@@ -168,6 +224,9 @@ public class CanvasPanel extends JPanel{
         this.repaint();
     }
 
+    /**
+     * Visiškai išvalo drobę – pašalina visas nupieštas figūras ir pasirinkimus.
+     */
     public void clearCanvas() {
         this.shapes.clear();
         this.selectedShapes.clear();
@@ -175,13 +234,16 @@ public class CanvasPanel extends JPanel{
         this.repaint();
     }
 
+    /**
+     * Tikrina figūrų sąrašą (nuo viršaus į apačią) ieškant figūros,
+     * į kurios ribas pataiko duotas taškas. Rastą figūrą priskiria aktyviai.
+     * @param p Taškas (paprastai pelės paspaudimo koordinatės).
+     */
     public void findSelectedShape(Point p){
         for (int i = shapes.size() - 1; i >= 0; --i){
             Shape s = shapes.get(i);
             if (s.contains(p)){
                 currShape = s;
-
-                // DO something I guess
                 repaint();
                 return;
             }
@@ -189,6 +251,10 @@ public class CanvasPanel extends JPanel{
         currShape = null;
     }
 
+    /**
+     * Pakeičia dabartinę piešimo spalvą ir priskiria ją visoms šiuo metu pasirinktoms figūroms.
+     * @param newColor Nauja pasirinkta spalva.
+     */
     public void changeColor(Color newColor) {
         this.currentColor = newColor;
         for (Shape s : selectedShapes) {
@@ -197,6 +263,10 @@ public class CanvasPanel extends JPanel{
         this.repaint();
     }
 
+    /**
+     * Naudojant Java objektų serializaciją, išsaugo visas drobės figūras į failą.
+     * @param filepath Failo, į kurį bus išsaugota, kelias (pvz. "C:/.../file.bin").
+     */
     public void saveToFile(String filepath) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filepath))) {
             oos.writeObject(this.shapes); 
@@ -206,27 +276,37 @@ public class CanvasPanel extends JPanel{
         }
     }
 
-    @SuppressWarnings("unchecked") // Tells Java to trust that we are reading an ArrayList<Shape>
+    /**
+     * Naudojant Java objektų deserializaciją, užkrauna figūrų sąrašą iš išsaugoto failo.
+     * Užkrovus išvalo ankstesnį drobės būvį.
+     * @param filepath Išsaugoto failo kelias.
+     */
+    @SuppressWarnings("unchecked") // Nurodo Java pasitikėti, kad bus nuskaitytas ArrayList<Shape>
     public void loadFromFile(String filepath) {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filepath))) {
-            // Read the object and cast it back to an ArrayList<Shape>
+            // Nuskaito objektą ir konvertuoja atgal į ArrayList<Shape>
             this.shapes = (ArrayList<Shape>) ois.readObject(); 
             
-            // Clean up the canvas state just in case
+            // Išvalo drobės būseną
             this.selectedShapes.clear(); 
             this.currShape = null;
             this.currTool = ToolType.SELECT;
             
-            this.repaint(); // Redraw the newly loaded shapes!
+            this.repaint(); // Perpiešia naujai užkrautas figūras
             System.out.println("Shapes successfully loaded from " + filepath);
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error loading file: " + e.getMessage());
         }
     }
 
+    /**
+     * Swing metodas, atsakingas už drobės perpiešimą. 
+     * Nupiešia visas figūras ir apibrėžia pasirinktas figūras raudonu ribojamuoju rėmeliu (bounding box).
+     * @param g Grafinis kontekstas (Graphics objektas).
+     */
     @Override
     protected void paintComponent(Graphics g){
-        super.paintComponent(g); // Draw background
+        super.paintComponent(g); // Nupiešia foną
         for (Shape shape : shapes)
         {
             shape.draw(g);
