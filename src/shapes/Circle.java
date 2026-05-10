@@ -23,7 +23,8 @@ public class Circle extends Shape{
 
     @Override
     public void setSize(int width, int height){
-        this.radius = Math.max(Math.abs(width), Math.abs(height)) / 2;
+        // Calculates the exact distance from the click point to the mouse
+        this.radius = (int) Math.sqrt((width * width) + (height * height));
     }
 
     @Override

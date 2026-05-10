@@ -42,29 +42,33 @@ public class Rectangle extends Shape{
     @Override
     public void draw(Graphics g){
 
-        int x = getPoint().x;
-        int y = getPoint().y;
+        int drawX = width < 0 ? position.x + width : position.x;
+        int drawY = length < 0 ? position.y + length : position.y;
+        
         g.setColor(this.color);
-        g.drawRect(x, y, width, length);
+        g.drawRect(drawX, drawY, Math.abs(width), Math.abs(length));
     }
 
     @Override
     public boolean contains(Point mousePoint) {
-        return (mousePoint.x >= position.x && mousePoint.x <= position.x + width && 
-                mousePoint.y >= position.y && mousePoint.y <= position.y + length);
+
+        int drawX = width < 0 ? position.x + width : position.x;
+        int drawY = length < 0 ? position.y + length : position.y;
+
+        return (mousePoint.x >= drawX && mousePoint.x <= drawX + Math.abs(width) && 
+                mousePoint.y >= drawY && mousePoint.y <= drawY + Math.abs(length));
     }
 
     @Override
     public java.awt.Rectangle getBounds(){
-        int x = getPoint().x - 5;
-        int y = getPoint().y - 5;
+        int drawX = width < 0 ? position.x + width : position.x;
+        int drawY = length < 0 ? position.y + length : position.y;
 
         // Since we add 5 pixels on x and y, the lengths increase by 10
-        int boundWidth = this.width + 10;
-        int boundLength = this.length + 10;
+        int boundWidth = Math.abs(this.width) + 10;
+        int boundLength = Math.abs(this.length) + 10;
 
-        return new java.awt.Rectangle(x, y, boundWidth, boundLength);
-
+        return new java.awt.Rectangle(drawX - 5, drawY - 5, boundWidth, boundLength);
     }
 
     

@@ -37,7 +37,7 @@ public class Triangle extends Shape {
     }
     
     private double getTriangleArea(){
-        return (base * height) / 2.0;
+        return Math.abs((base * height) / 2.0);
     }
     
     @Override
@@ -75,13 +75,13 @@ public class Triangle extends Shape {
 
     @Override
     public java.awt.Rectangle getBounds(){
-        int x = this.position.x - 5;
-        int y = this.position.y - height - 5;
+        // Find the true lowest X and Y values
+        int minX = Math.min(this.position.x, this.position.x + base);
+        int minY = Math.min(this.position.y, this.position.y - height);
 
-        int boundHeight = this.height + 10;
-        int boundWidth = this.base + 10;
+        int boundHeight = Math.abs(this.height) + 10;
+        int boundWidth = Math.abs(this.base) + 10;
 
-        return new java.awt.Rectangle(x, y, boundWidth, boundHeight);
-
+        return new java.awt.Rectangle(minX - 5, minY - 5, boundWidth, boundHeight);
     }
 }
