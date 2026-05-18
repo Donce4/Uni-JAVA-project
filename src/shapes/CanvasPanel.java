@@ -61,7 +61,7 @@ public class CanvasPanel extends JPanel{
      */
     public CanvasPanel(){
         this.setFocusable(true);
-
+        
         this.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
             public void keyPressed(java.awt.event.KeyEvent e) {
